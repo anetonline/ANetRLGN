@@ -2,7 +2,7 @@
 
 ### Outbound RLogin for Classic DOS BBS Systems
 
-**ANetRLogin v0.2.0 — Low-Latency Release**
+**ANetRLogin v0.2.0**
 
 ANetRLogin is an outbound **RLogin door for classic DOS BBS software**.
 
