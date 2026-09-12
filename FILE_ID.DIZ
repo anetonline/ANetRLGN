@@ -1,0 +1,8 @@
+ANetRLogin v0.2.0 
+
+Outbound RLogin for classic DOS BBS systems. 16-bit DOS/OpenDoors door +
+Win32 bridge. Supports DOOR.SYS/FOSSIL, per-node sessions, multiple
+allowlisted RLogin destinations, %USER%/%ALIAS% mapping, ANSI terminal
+relay, and quick ESC-ESC-ESC return to the BBS. Low-latency v0.2
+network/IPC relay engine. Developed/tested with Spitfire on A-Net
+Online. By: A-Net Online / StingRay

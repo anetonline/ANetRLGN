@@ -1,0 +1,155 @@
+ANetRLogin v0.2.0 - Setup and Configuration
+
+ANETRLGN.INI
+
+ANETRLGN.INI is the destination allowlist used by the Windows bridge.
+
+Each destination begins with:
+
+    [destination ID]
+
+The ID is the short name passed to ANETRLGN.EXE by the BBS.
+
+Example:
+
+    [destination ANETGAMES]
+    name=A-Net Game Server
+    host=game.a-net-online.lol
+    port=513
+    client_user=%USER%
+    server_user=%ALIAS%
+    term=ansi/115200
+    expect_ack=1
+
+
+
+The corresponding BBS command is:
+
+    ANETRLGN.EXE ANETGAMES
+
+Destination Fields
+
+name= Friendly description of the destination.
+
+host= Hostname or IP address of the remote RLogin server.
+
+port= TCP port. Traditional RLogin normally uses port 513, but another
+port may be configured when required.
+
+client_user= Value sent in the first RLogin username field.
+
+server_user= Value sent in the second RLogin username field.
+
+term= Terminal/speed field sent during the RLogin handshake. Example:
+ansi/115200
+
+expect_ack= 1 = wait for the normal RLogin acknowledgement. Use the
+value required by the destination.
+
+User Macros
+
+The following macros may be used in the RLogin username fields:
+
+    %USER%   BBS user name
+    %ALIAS%  BBS alias/handle
+
+Example:
+
+    client_user=%USER%
+    server_user=%ALIAS%
+
+Different RLogin servers may use the RFC1282 username fields
+differently. Configure these values separately for each destination when
+necessary.
+
+Multiple Destinations
+
+ANetRLogin is designed to support multiple outbound RLogin destinations.
+
+Example:
+
+    [destination ANETGAMES]
+    name=A-Net Game Server
+    host=game.a-net-online.lol
+    port=513
+    client_user=%USER%
+    server_user=%ALIAS%
+    term=ansi/115200
+    expect_ack=1
+
+    [destination MYSTIC]
+    name=A-Net Mystic
+    host=mystic-anet.online
+    port=513
+    client_user=%USER%
+    server_user=%ALIAS%
+    term=ansi/115200
+    expect_ack=1
+
+    [destination DROID]
+    name=Droid Matrix
+    host=droid.a-net.online
+    port=5513
+    client_user=%USER%
+    server_user=%ALIAS%
+    term=ansi/115200
+    expect_ack=1
+
+The BBS can then have separate menu entries:
+
+    A-Net Game Server:
+        ANETRLGN.EXE ANETGAMES
+
+    Mystic:
+        ANETRLGN.EXE MYSTIC
+
+    Droid Matrix:
+        ANETRLGN.EXE DROID
+
+There is no need for a separate copy of ANETRLGN.EXE for each
+destination.
+
+Restart ANETRLB.EXE after changing the destination configuration.
+
+ANETRLGN.CFG
+
+ANETRLGN.CFG controls the OpenDoors/BBS side.
+
+Tested Spitfire example:
+
+    BBSDir C:\SF
+    DoorDir C:\SF\DOORS\ANETRLGN
+    DisableLogging
+
+BBSDir: Directory in which the BBS creates the caller’s drop file.
+
+DoorDir: ANetRLogin working directory. Both ANETRLGN.EXE and ANETRLB.EXE
+must see the same local IPC files here.
+
+DisableLogging: Disables OpenDoors’ own logging. ANetRLogin does not
+require it.
+
+Per-Node Operation
+
+ANetRLogin uses separate local IPC files for each BBS node. The Windows
+bridge can service multiple active nodes while keeping their sessions
+separate.
+
+The bridge supports up to 32 nodes and up to 32 configured destinations.
+
+Recommended BBS Menu Design
+
+A clean setup is to create an “Outbound RLogin” or “Other BBSes / Game
+Servers” menu and assign one BBS menu command to each destination.
+
+The caller sees only friendly menu choices. Hostnames and ports remain
+under sysop control in ANETRLGN.INI.
+
+Security Notes
+
+ANetRLogin’s destination allowlist is intentional. Do not modify the BBS
+menu command to accept caller-supplied hosts or ports.
+
+RLogin provides no encryption. Usernames, terminal traffic, and other
+data may travel in plaintext. Use destinations and network paths
+appropriate for that limitation.

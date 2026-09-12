@@ -1,0 +1,135 @@
+ANetRLogin v0.2.0 - Installation
+
+
+
+    C:\PATH\TO           BBS working directory / live DOOR.SYS
+                        (i.e. c:\bbs -if door.sys is in c:\bbs)
+    C:\path\to\ANETRLGN  ANetRLogin directory
+
+If your BBS uses different directories, change ANETRLGN.CFG accordingly.
+
+1. Create the Door Directory
+
+Create:
+
+    C:\BBS\ANETRLGN
+
+Copy these files into it:
+
+    ANETRLGN.EXE
+    ANETRLB.EXE
+    ANETRLGN.CFG
+    ANETRLGN.INI
+
+README.TXT, INSTALL.TXT, SETUP.TXT and FILE_ID.DIZ may also be kept
+there.
+
+2. Configure 
+
+ANETRLGN.CFG should contain:
+
+    BBSDir C:\BBS
+    DoorDir C:\bbs\doors\ANETRLGN
+    DisableLogging    (or enable)
+
+BBSDir must point to the directory containing the live DOOR.SYS
+generated for the caller.
+
+DoorDir must point to the ANetRLogin directory. The DOS door and Windows
+bridge use this directory for their per-node relay files.
+
+3. Configure Destinations
+
+Edit ANETRLGN.INI and create one [destination ID] section for each
+allowed RLogin server.
+
+Example:
+
+    [destination ANETGAMES]
+    name=A-Net Game Server
+    host=game.a-net-online.lol
+    port=513
+    client_user=%USER%
+    server_user=%ALIAS%
+    term=ansi/115200
+    expect_ack=1
+
+See SETUP.TXT for multiple destinations and field descriptions.
+
+4. Start the Windows Bridge
+
+Open a Windows command prompt:
+
+    CD /D C:\path\to\ANETRLGN
+    ANETRLB.EXE
+
+Leave the bridge running while callers use ANetRLogin.
+
+At startup it reports how many allowlisted destinations were loaded.
+
+If you edit ANETRLGN.INI, stop and restart ANETRLB.EXE so the new
+configuration is loaded.
+
+5. Add the Door to the BBS
+
+Configure the BBS to launch ANETRLGN.EXE with the desired destination
+ID.
+
+Example:
+
+    C:\bbs\doors\ANETRLGN\ANETRLGN.EXE ANETGAMES
+
+For another destination:
+
+    C:\bbs\doors\ANETRLGN\ANETRLGN.EXE ANETBBS
+
+Each BBS menu entry can therefore point to the same executable with a
+different destination ID.
+
+6. Test
+
+Call the BBS remotely through the normal modem/Telnet/NetSerial path and
+launch the new door.
+
+A successful session follows this path:
+
+    Caller
+      |
+      v
+    Spitfire / DOS BBS
+      |
+      v
+    ANETRLGN.EXE
+      |
+      v
+    ANETRLB.EXE
+      |
+      v
+    Remote RLogin Server
+
+To return to the BBS, press ESC three times quickly.
+
+Startup Note
+
+ANETRLB.EXE must be running for ANETRLGN.EXE to connect. Once
+installation has been tested manually, the bridge may be started
+automatically with Windows using the administrator’s preferred startup
+method.
+
+Troubleshooting
+
+If the door starts but cannot connect:
+
+1.  Confirm ANETRLB.EXE is running.
+2.  Confirm the destination ID on the BBS command exactly matches the
+    [destination ID] in ANETRLGN.INI.
+3.  Confirm the hostname and port are correct.
+4.  Confirm the Windows machine can reach the remote host and port.
+5.  Confirm BBSDir points to the directory containing the current
+    DOOR.SYS.
+6.  Confirm DoorDir points to the same directory in which the bridge is
+    running.
+7.  Restart ANETRLB.EXE after changing ANETRLGN.INI.
+
+Do not expose arbitrary destination input to callers. Keep all hosts and
+ports in the ANETRLGN.INI allowlist.
