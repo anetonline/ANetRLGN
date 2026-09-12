@@ -116,6 +116,90 @@ installation has been tested manually, the bridge may be started
 automatically with Windows using the administrator’s preferred startup
 method.
 
+# MULTI-NODE INSTALLATION
+
+ANetRLogin can service multiple simultaneous BBS nodes through one running
+ANETRLB.EXE bridge.
+
+If every BBS node creates its drop file in a different directory, each node
+needs its own ANETRLGN.CFG so OpenDoors can locate that node's DOOR.SYS.
+
+Example Spitfire installation:
+
+```
+Node 1 drop file:
+C:\SF\SFEXTEN2\DOOR.SYS
+
+Node 2 drop file:
+C:\SF2\SFEXTEN2\DOOR.SYS
+```
+
+A convenient layout is:
+
+```
+C:\SF\ANETRLGN\
+    ANETRLB.EXE
+    ANETRLGN.INI
+
+C:\SF\ANETRLGN\NODE1\
+    ANETRLGN.EXE
+    ANETRLGN.CFG
+
+C:\SF\ANETRLGN\NODE2\
+    ANETRLGN.EXE
+    ANETRLGN.CFG
+```
+
+Node 1 ANETRLGN.CFG:
+
+```
+BBSDir C:\SF\SFEXTEN2
+DoorDir C:\SF\ANETRLGN
+DisableLogging
+```
+
+Node 2 ANETRLGN.CFG:
+
+```
+BBSDir C:\SF2\SFEXTEN2
+DoorDir C:\SF\ANETRLGN
+DisableLogging
+```
+
+IMPORTANT:
+
+```
+BBSDir  is specific to each BBS node.
+DoorDir must be shared by all ANetRLogin nodes.
+```
+
+The shared DoorDir allows every DOS-door instance to communicate with the
+same ANETRLB.EXE bridge.
+
+Example door commands:
+
+```
+Node 1:
+C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE ANETGAMES
+
+Node 2:
+C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE ANETGAMES
+```
+
+Do NOT start a separate ANETRLB.EXE for every BBS node.
+
+One bridge services the active nodes and creates a separate outbound RLogin
+connection for each caller.
+
+ANetRLogin identifies sessions by BBS node number. Node 1 uses ARL01.*
+IPC files, Node 2 uses ARL02.*, and so on.
+
+This configuration has been tested live with two simultaneous nodes on
+A-Net Online's Spitfire BBS, with both callers connected through ANetRLogin
+to the A-Net Game Server.
+
+
+
 Troubleshooting
 
 If the door starts but cannot connect:
