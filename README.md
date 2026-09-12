@@ -39,7 +39,7 @@ https://github.com/user-attachments/assets/3e877981-5124-40b9-8b2a-64e69a34fb53
 - BBS username and alias/handle detection
 - Multiple RLogin destinations from a single door executable
 - Up to **32 configured destinations**
-- Up to **32 BBS nodes**
+- Up to **10 BBS nodes**
 - Per-node sessions
 - Destination allowlist for outbound connections
 - `%USER%` and `%ALIAS%` RLogin username mapping
@@ -248,6 +248,168 @@ FILE_ID.DIZ
 ```
 
 ---
+
+# 👥 Multi-Node Operation
+
+ANetRLogin supports multiple simultaneous BBS nodes through a single
+`ANETRLB.EXE` Windows bridge.
+
+Each active DOS door uses its BBS node number to create a separate set of
+local IPC files. This keeps each caller's terminal data and RLogin session
+isolated from the other nodes.
+
+For example:
+
+```text
+Spitfire Node 1                         Spitfire Node 2
+      │                                       │
+      ▼                                       ▼
+ANETRLGN.EXE                            ANETRLGN.EXE
+      │                                       │
+      ▼                                       ▼
+   ARL01.*                                  ARL02.*
+      │                                       │
+      └──────────────────┬────────────────────┘
+                         │
+                         ▼
+                   ANETRLB.EXE
+                  One Win32 Bridge
+                     │       │
+                     ▼       ▼
+                 RLogin #1 RLogin #2
+```
+
+Only **one copy of `ANETRLB.EXE` needs to be running**. The bridge detects
+requests from the individual BBS nodes and maintains a separate outbound
+RLogin connection for each active session.
+
+## BBSes With Separate Drop-File Directories
+
+Some classic multi-node BBS packages maintain a different working or
+drop-file directory for each node.
+
+Spitfire is one example.
+
+On the live A-Net Online installation, ANetRLogin is launched from Spitfire's
+extended door menu and the drop files are located at:
+
+```text
+Node 1: C:\SF\SFEXTEN2\DOOR.SYS
+Node 2: C:\SF2\SFEXTEN2\DOOR.SYS
+```
+
+Each node therefore needs an `ANETRLGN.CFG` that points OpenDoors to the
+correct drop-file directory.
+
+A convenient installation layout is:
+
+```text
+C:\SF\ANETRLGN\
+    ANETRLB.EXE
+    ANETRLGN.INI
+
+C:\SF\ANETRLGN\NODE1\
+    ANETRLGN.EXE
+    ANETRLGN.CFG
+
+C:\SF\ANETRLGN\NODE2\
+    ANETRLGN.EXE
+    ANETRLGN.CFG
+```
+
+Node 1 `ANETRLGN.CFG`:
+
+```text
+BBSDir C:\SF\SFEXTEN2
+DoorDir C:\SF\ANETRLGN
+
+DisableLogging
+```
+
+Node 2 `ANETRLGN.CFG`:
+
+```text
+BBSDir C:\SF2\SFEXTEN2
+DoorDir C:\SF\ANETRLGN
+
+DisableLogging
+```
+
+The important rule is:
+
+```text
+BBSDir  = node-specific drop-file directory
+DoorDir = shared ANetRLogin IPC directory
+```
+
+`BBSDir` changes because each BBS node creates its own `DOOR.SYS`.
+
+`DoorDir` remains the same because every ANetRLogin DOS instance must
+communicate with the same Windows bridge.
+
+The corresponding Spitfire door commands are:
+
+```text
+Node 1:
+C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE ANETGAMES
+
+Node 2:
+C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE ANETGAMES
+```
+
+Both callers can select the same destination—or different configured
+destinations—at the same time.
+
+## Per-Node IPC
+
+ANetRLogin keeps sessions separate by incorporating the BBS node number
+into its IPC filenames.
+
+For example, Node 1 uses:
+
+```text
+ARL01.REQ
+ARL01.STA
+ARL01.D2B
+ARL01.B2D
+ARL01.CTL
+```
+
+while Node 2 uses:
+
+```text
+ARL02.REQ
+ARL02.STA
+ARL02.D2B
+ARL02.B2D
+ARL02.CTL
+```
+
+The single Windows bridge monitors the shared IPC directory and services
+each node independently.
+
+## Live Multi-Node Test
+
+Multi-node operation has been tested live on **A-Net Online's Spitfire
+BBS**.
+
+Two simultaneous Spitfire callers were connected through separate BBS
+nodes, both running ANetRLogin and both connected to the **A-Net Game
+Server** through a single `ANETRLB.EXE` bridge.
+
+```text
+Spitfire Node 1 ── ANetRLogin ──┐
+                                 ├── ANETRLB.EXE ── A-Net Game Server
+Spitfire Node 2 ── ANetRLogin ──┘
+```
+
+Both sessions operated simultaneously with normal interactive
+responsiveness.
+
+ANetRLogin supports up to **10 BBS node IDs** and **32 configured RLogin
+destinations**.
+
+
 
 ## ⚙️ OpenDoors / Spitfire Configuration
 
@@ -519,7 +681,7 @@ allowing one Windows bridge process to service multiple ANetRLogin sessions.
 ANetRLogin supports up to:
 
 ```text
-32 BBS nodes
+10 BBS nodes
 32 RLogin destinations
 ```
 
