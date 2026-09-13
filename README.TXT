@@ -1,83 +1,71 @@
-ANetRLogin v0.2.0
+ANetRLogin v0.2.5
+===================
 
-ANetRLogin is an outbound RLogin door for classic DOS BBS software.
+Outbound RLogin for classic DOS BBS systems.
 
-It was created for A-Net Online’s Spitfire BBS, allowing callers on a
-DOS BBS to connect to modern RLogin-enabled BBSes and game servers while
-continuing to use the BBS’s normal FOSSIL/door interface.
+ANetRLogin consists of:
 
-ANetRLogin uses two small programs:
+  ANETRLGN.EXE  16-bit DOS/OpenDoors/FOSSIL door
+  ANETRLB.EXE   32-bit Windows RLogin bridge/multiplexer
+  ANETRLV.EXE   32-bit Windows read-only ANSI/CP437 local viewer
 
--   ANETRLGN.EXE - 16-bit DOS door. Runs from the BBS and communicates
-    with the caller through OpenDoors/FOSSIL.
--   ANETRLB.EXE - 32-bit Windows bridge. Makes the outbound TCP/RLogin
-    connection and relays data between the DOS door and remote server.
+The DOS door keeps the caller path compatible with classic BBS software. The
+bridge owns TCP/RLogin. The optional local viewer mirrors remote ANSI/CP437 in
+a separate Win32 window and never sits in the caller path.
 
-The bridge uses a destination allowlist. Callers select only a
-configured destination ID; they cannot supply arbitrary hostnames or
-ports.
+FEATURES
+--------
+- Up to 10 BBS nodes through one bridge
+- Up to 32 allowlisted destinations
+- %USER%, %ALIAS%, %PASSWORD% macros
+- Tested Synchronet mapping: PASSWORD first, USER second
+- Non-blocking/TCP_NODELAY low-latency relay
+- Per-node IPC/session isolation
+- Optional per-node local viewer
+- Configurable viewer geometry, including 80 columns and configurable widths
+- ESC ESC ESC manual disconnect
+- Password never displayed by bridge/viewer logs or UI
 
-Requirements
+A-Net Game Server example:
 
--   DOS-compatible BBS that creates a supported door drop file
--   FOSSIL driver / virtual modem environment used by the BBS
--   Windows host capable of running the 32-bit ANETRLB.EXE bridge
--   Network access from the Windows host to the configured RLogin
-    server(s)
+  [general]
+  local_viewer=1
+  viewer_cols=80
+  viewer_rows=25
 
-ANetRLogin was developed and tested with Spitfire using DOOR.SYS and a
-Windows 7 32-bit host.
+  [destination ANETGAMES]
+  name=A-Net Game Server
+  host=game.a-net-online.lol
+  port=513
+  client_user=%PASSWORD%
+  server_user=%USER%
+  term=ansi/115200
+  expect_ack=1
+  viewer_cols=80
+  viewer_rows=25
 
-Included Files
+The viewer geometry affects only ANETRLV.EXE, not the caller terminal.
 
-ANETRLGN.EXE DOS door ANETRLB.EXE Windows RLogin bridge ANETRLGN.CFG
-OpenDoors/BBS configuration ANETRLGN.INI RLogin destination allowlist
-README.TXT Overview and usage INSTALL.TXT Installation instructions
-SETUP.TXT Configuration and multi-destination examples FILE_ID.DIZ BBS
-file description
+MULTI-NODE
+----------
+Use a node-specific BBSDir for the live DOOR.SYS and the SAME shared DoorDir
+for all nodes. One ANETRLB.EXE services all active nodes.
 
-How It Works
-
-Caller -> BBS -> ANETRLGN.EXE -> local per-node IPC -> ANETRLB.EXE ->
-TCP/RLogin -> configured remote BBS or game server
-
-ANETRLGN.EXE is launched with a destination ID:
-
-    ANETRLGN.EXE ANETGAMES
-
-ANETRLB.EXE looks up ANETGAMES in ANETRLGN.INI and makes the connection.
-
-Multiple destinations may be configured. The same ANETRLGN.EXE is used
-for every destination; only the command-line destination ID changes.
-
-Disconnecting
-
-Press ESC three times quickly while inside ANetRLogin to disconnect the
-outbound RLogin session and return to the BBS.
+A-Net examples:
+  Node 1 BBSDir C:\SF\SFEXTEN2
+  Node 2 BBSDir C:\SF2\SFEXTEN2
+  Shared DoorDir C:\SF\ANETRLGN
 
 SECURITY
 --------
-RLogin is plaintext. When %PASSWORD% is used, the password is transmitted
-unencrypted over the RLogin connection.
+Destinations are allowlisted in ANETRLGN.INI. Callers cannot supply arbitrary
+hosts/ports. RLogin is plaintext, so %PASSWORD% is transmitted unencrypted
+when that macro is used. Prefer trusted/private/VPN paths where practical.
 
-ANetRLogin uses a destination allowlist and does not allow callers to
-supply arbitrary hosts or ports.
+See INSTALL.TXT and SETUP.TXT for full details.
 
-RLogin is a plaintext protocol. ANetRLogin does not add encryption to
-it. Use RLogin only to systems you trust and preferably across
-trusted/private networks or VPN paths when appropriate.
-
-ANetRLogin deliberately does NOT accept an arbitrary hostname or port
-from the caller. All remote systems must be explicitly configured in
-ANETRLGN.INI.
-
-Low-latency release. It improves interactive
-responsiveness with non-blocking network relay behavior, TCP_NODELAY,
-faster IPC polling, and immediate handling of terminal traffic.
-
-ANetRLogin By: A-Net Online Sysop: StingRay
+A-Net Online / StingRay
 https://a-net.online
 https://bbs.a-net.fyi
-
 telnet://bbs.a-net.online:1337
 ssh://bbs.a-net.online:1338

@@ -1,11 +1,10 @@
 <img width="1389" height="703" alt="image" src="https://github.com/user-attachments/assets/d34644b6-7e3a-4384-969e-ef3da9e7d8e8" />
 
-
 # ANetRLogin
 
 ### Outbound RLogin for Classic DOS BBS Systems
 
-**ANetRLogin v0.2.1 — User/Password + Multi-Node Release**
+**ANetRLogin v0.2.5 — Multi-Node, User/Password, Low-Latency + Local Viewer**
 
 ANetRLogin is an outbound **RLogin door for classic DOS BBS software**.
 
@@ -14,9 +13,8 @@ DOS BBS to connect to modern RLogin-enabled BBSes and game servers while
 continuing to use the BBS's normal **FOSSIL / door interface**.
 
 ANetRLogin combines a **16-bit DOS door built with the OpenDoors Door
-Programming Toolkit** with a **32-bit Windows bridge**, bringing TCP/IP
-RLogin connectivity to classic BBS software without requiring the DOS BBS
-itself to provide a TCP/IP stack.
+Programming Toolkit**, a **32-bit Windows RLogin bridge**, and an optional
+**32-bit Windows ANSI/CP437 local viewer**.
 
 ---
 
@@ -36,34 +34,33 @@ https://github.com/user-attachments/assets/3e877981-5124-40b9-8b2a-64e69a34fb53
 
 - **16-bit DOS door built with OpenDoors**
 - **32-bit Windows RLogin bridge**
+- **32-bit Windows local ANSI/CP437 viewer**
 - OpenDoors drop-file and caller integration
 - DOOR.SYS support
 - FOSSIL communications
-- BBS username, alias/handle, and password mapping
-- `%USER%`, `%ALIAS%`, and `%PASSWORD%` macros
+- `%USER%`, `%ALIAS%`, and `%PASSWORD%` caller macros
+- Synchronet-compatible tested **password-first / user-second** mapping
 - Multiple RLogin destinations from one door executable
 - Up to **10 BBS nodes**
 - Up to **32 configured destinations**
 - One shared Win32 bridge for all active nodes
+- One optional local viewer window per active node
+- Configurable viewer geometry, including **80-column and configurable-width** sessions
 - Per-node IPC/session isolation
-- Destination allowlist for outbound connections
+- Strict destination allowlist
 - Configurable RLogin client/server identity fields
 - Configurable terminal/speed field
-- ANSI terminal relay
-- Non-blocking network I/O
-- `TCP_NODELAY`
+- ANSI/CP437 terminal relay
+- Non-blocking network I/O and `TCP_NODELAY`
 - Low-latency DOS ↔ Windows IPC polling
-- Quick **ESC ESC ESC** disconnect back to the BBS
-- No arbitrary caller-supplied hostnames or ports
-- Password values are never displayed by the bridge
+- Quick **ESC ESC ESC** manual disconnect back to the BBS
+- Password values are never displayed by the bridge or local viewer
 
 ---
 
 ## 🖥️ How It Works
 
 ```text
-                    ANetRLogin Architecture
-
                        Caller
                          │
                          ▼
@@ -71,75 +68,45 @@ https://github.com/user-attachments/assets/3e877981-5124-40b9-8b2a-64e69a34fb53
                 │    DOS BBS      │
                 │   (Spitfire)    │
                 └────────┬────────┘
-                         │
-                  DOOR.SYS / FOSSIL
-                         │
+                         │ DOOR.SYS / FOSSIL
                          ▼
                 ┌─────────────────┐
                 │    OpenDoors    │
-                │     Toolkit     │
                 └────────┬────────┘
-                         │
                          ▼
                 ┌─────────────────┐
                 │  ANETRLGN.EXE   │
                 │   16-bit DOS    │
                 └────────┬────────┘
-                         │
-                  Local Per-Node IPC
-                         │
+                         │ per-node IPC
                          ▼
                 ┌─────────────────┐
-                │   ANETRLB.EXE   │
-                │  32-bit Win32   │
-                │     Bridge      │
-                └────────┬────────┘
-                         │
-                    TCP / RLogin
-                         │
-                         ▼
-                ┌─────────────────┐
-                │   Remote BBS    │
-                │       or        │
-                │   Game Server   │
+                │   ANETRLB.EXE   │──────────────┐
+                │  32-bit Win32   │              │ mirror only
+                └────────┬────────┘              ▼
+                         │ TCP / RLogin     ┌──────────────┐
+                         ▼                  │ ANETRLV.EXE  │
+                ┌─────────────────┐         │ local viewer │
+                │ Remote BBS/Game │         └──────────────┘
                 └─────────────────┘
 ```
 
-`ANETRLGN.EXE` runs as the DOS BBS door and communicates with the caller
-through OpenDoors and the BBS's FOSSIL environment.
+`ANETRLGN.EXE` remains responsible only for the DOS/OpenDoors/FOSSIL caller
+path. `ANETRLB.EXE` owns networking and the RLogin handshake. `ANETRLV.EXE`
+is a separate read-only monitor and is **not** in the caller data path.
 
-`ANETRLB.EXE` runs under Windows and handles DNS, TCP, and the RLogin
-handshake.
-
-The two programs communicate through local **per-node IPC files**, allowing
-the DOS side to remain compatible with the classic BBS environment while
-the Win32 side handles modern networking.
+Closing a local viewer does not disconnect the caller.
 
 ---
 
 ## 🚪 OpenDoors
 
 ANetRLogin's 16-bit DOS door is built using the **OpenDoors Door Programming
-Toolkit**.
+Toolkit**. OpenDoors provides drop-file handling, caller information, user
+name/alias/password fields when available, node information, carrier detection,
+keyboard input, terminal output, and FOSSIL communications.
 
-OpenDoors provides the classic BBS interface used by `ANETRLGN.EXE`,
-including:
-
-- Door drop-file handling
-- Caller information
-- User name and alias/handle information
-- User password information when supplied by the drop file
-- BBS node information
-- Carrier detection
-- Keyboard input
-- Terminal output
-- FOSSIL communications
-
-For A-Net Online's Spitfire installation, OpenDoors reads Spitfire's
-`DOOR.SYS` and communicates with the caller through the BBS's
-FOSSIL/virtual-modem environment.
-
-ANetRLogin then makes the values available to the destination configuration:
+ANetRLogin makes these caller values available as destination macros:
 
 ```text
 %USER%       BBS user name
@@ -147,36 +114,23 @@ ANetRLogin then makes the values available to the destination configuration:
 %PASSWORD%   BBS password
 ```
 
-### OpenDoors Project
-
-ANetRLogin uses the open-source **OpenDoors Door Programming Toolkit**:
-
+OpenDoors project:
 https://github.com/RealDeuce/OpenDoors
 
-OpenDoors does **not** need to be separately installed by users of the
-compiled ANetRLogin release. The required OpenDoors functionality is
-incorporated into the compiled DOS door.
-
-Our thanks to the OpenDoors developers and contributors for preserving and
-maintaining this extremely useful toolkit for classic BBS door development.
+OpenDoors does **not** need to be installed separately to use the compiled
+ANetRLogin DOS door.
 
 ---
 
 ## 📋 Requirements
 
 - DOS-compatible BBS that creates a supported door drop file
-- FOSSIL driver / virtual modem environment used by the BBS
-- Windows host capable of running the 32-bit `ANETRLB.EXE` bridge
-- Network access from the Windows host to the configured RLogin server(s)
+- FOSSIL driver / virtual-modem environment used by the BBS
+- Windows host capable of running 32-bit Win32 programs
+- Network access from the Windows host to configured RLogin server(s)
 
-ANetRLogin was developed and tested with:
-
-- **Spitfire BBS**
-- **DOOR.SYS**
-- **Windows 7 32-bit**
-- FOSSIL / virtual modem environment
-- SyncTERM
-- TCP/RLogin
+Developed and live-tested with **Spitfire BBS**, **DOOR.SYS**, **Windows 7
+32-bit**, OpenDoors/FOSSIL, SyncTERM, Synchronet RLogin, and A-Net Game Server.
 
 ---
 
@@ -185,10 +139,11 @@ ANetRLogin was developed and tested with:
 | File | Description |
 |---|---|
 | `ANETRLGN.EXE` | 16-bit DOS RLogin door |
-| `ANETRLB.EXE` | 32-bit Windows RLogin bridge |
+| `ANETRLB.EXE` | 32-bit Windows RLogin bridge/multiplexer |
+| `ANETRLV.EXE` | 32-bit Windows read-only ANSI/CP437 local viewer |
 | `ANETRLGN.CFG` | OpenDoors / BBS configuration |
-| `ANETRLGN.INI` | RLogin destination allowlist |
-| `README.TXT` | Program overview and usage |
+| `ANETRLGN.INI` | General settings + RLogin destination allowlist |
+| `README.TXT` | Plain-text overview |
 | `INSTALL.TXT` | Installation instructions |
 | `SETUP.TXT` | Configuration and multi-node examples |
 | `FILE_ID.DIZ` | Classic BBS file description |
@@ -197,61 +152,73 @@ ANetRLogin was developed and tested with:
 
 # 🚀 Installation
 
-The following example uses the directory layout from the live
-**A-Net Online Spitfire BBS** installation.
-
-### Shared ANetRLogin directory
+A-Net Online uses a shared ANetRLogin directory:
 
 ```text
 C:\SF\ANETRLGN
 ```
 
-Place the shared bridge and destination configuration here:
+Shared files:
 
 ```text
 ANETRLB.EXE
+ANETRLV.EXE
 ANETRLGN.INI
 ```
 
-For a single-node setup, `ANETRLGN.EXE` and `ANETRLGN.CFG` may also live
-directly in this directory.
+Each Spitfire node can have its own DOS door/config directory so OpenDoors can
+read the correct node-specific `DOOR.SYS`.
 
----
+For the live A-Net extended-door setup:
 
-## ⚙️ OpenDoors / Spitfire Configuration
+```text
+Node 1 DOOR.SYS: C:\SF\SFEXTEN2\DOOR.SYS
+Node 2 DOOR.SYS: C:\SF2\SFEXTEN2\DOOR.SYS
+```
 
-`ANETRLGN.CFG` tells OpenDoors where that node's live `DOOR.SYS` is located
-and where ANetRLogin's shared IPC directory is located.
-
-For the A-Net Online Spitfire **extended door menu**, Node 1 uses:
+Node 1 `ANETRLGN.CFG`:
 
 ```text
 BBSDir C:\SF\SFEXTEN2
 DoorDir C:\SF\ANETRLGN
-
 DisableLogging
 ```
 
-The important rule for multi-node systems is:
+Node 2:
 
 ```text
-BBSDir  = node-specific drop-file directory
-DoorDir = shared ANetRLogin IPC directory
+BBSDir C:\SF2\SFEXTEN2
+DoorDir C:\SF\ANETRLGN
+DisableLogging
+```
+
+Rule:
+
+```text
+BBSDir  = node-specific directory containing the live DOOR.SYS
+DoorDir = shared ANetRLogin bridge/IPC directory
 ```
 
 ---
 
-# 🌐 Configuring an RLogin Destination
+# 🌐 ANETRLGN.INI
 
-All permitted destinations are configured in:
+## General / Local Viewer
 
-```text
-ANETRLGN.INI
+```ini
+[general]
+local_viewer=1
+viewer_cols=80
+viewer_rows=25
 ```
 
-## Tested Synchronet-Compatible User/Password Mapping
+`local_viewer=1` automatically opens one `ANETRLV.EXE` window for each active
+node. Set it to `0` to disable local monitor windows.
 
-A-Net Online's Game Server is Synchronet-based. The tested working mapping is:
+`viewer_cols` and `viewer_rows` are defaults. A destination may override them.
+Supported local-viewer range is **40-160 columns** and **20-60 rows**.
+
+## Tested A-Net Game Server / Synchronet Mapping
 
 ```ini
 [destination ANETGAMES]
@@ -261,94 +228,31 @@ port=513
 
 client_user=%PASSWORD%
 server_user=%USER%
-
 term=ansi/115200
 expect_ack=1
+
+viewer_cols=80
+viewer_rows=25
 ```
 
-**The order is important.**
+**The tested Synchronet order is PASSWORD FIRST, USER SECOND.**
 
-For a Synchronet-compatible RLogin server, the password is placed in the
-RLogin `client_user` field and the BBS username is placed in the
-`server_user` field.
+For this target, `%PASSWORD%` is placed in RFC1282's `client_user` field and
+`%USER%` in `server_user`. Other RLogin servers may use those fields
+differently, so ANetRLogin leaves both configurable.
 
-This is the ANetRLogin equivalent of Synchronet's normal `rlogin.js -p`
-style of passing the caller's identity and password to another Synchronet
-RLogin server.
-
-The destination ID in this example is:
-
-```text
-ANETGAMES
-```
-
-The BBS launches it with:
-
-```text
-ANETRLGN.EXE ANETGAMES
-```
-
-`ANETRLB.EXE` looks up `ANETGAMES` in `ANETRLGN.INI` and makes the configured
-outbound RLogin connection.
-
-> Different RLogin servers may expect the two RFC1282 identity fields in a
-> different order. ANetRLogin therefore keeps both fields fully configurable.
-
----
-
-## 👤 Caller Identity Macros
-
-ANetRLogin v0.2.1 provides three macros:
-
-```text
-%USER%       BBS user name
-%ALIAS%      BBS alias / handle
-%PASSWORD%   BBS password
-```
-
-These may be used in either RLogin identity field.
-
-Examples:
-
-```ini
-client_user=%PASSWORD%
-server_user=%USER%
-```
-
-or:
-
-```ini
-client_user=%PASSWORD%
-server_user=%ALIAS%
-```
-
-or for a server that does not use a password:
-
-```ini
-client_user=%USER%
-server_user=%ALIAS%
-```
-
-The mapping is destination-specific, so one ANetRLogin installation can
-connect to servers with different RLogin conventions.
+The local-viewer geometry above does **not** alter what the caller receives;
+it only controls the separate local monitor window.
 
 ### Synchronet `-p` and `-h`
 
-Synchronet's outbound `rlogin.js` supports plain-password (`-p`) and
-hashed-password (`-h`) modes.
-
-ANetRLogin v0.2.1 currently implements the **plain-password** case by using
-`%PASSWORD%`.
-
-ANetRLogin does **not currently implement Synchronet's `-h` salted/hashed
-password algorithm**. Do not substitute an ordinary hash and assume it is
-compatible.
+ANetRLogin's `%PASSWORD%` support provides the plain-password behavior needed
+for Synchronet-style `-p` login. Synchronet also supports a salted/hashed `-h`
+mode; ANetRLogin does **not currently implement that hashing format**.
 
 ---
 
-# 🕹️ Multiple RLogin Destinations
-
-A single ANetRLogin installation can provide many outbound destinations.
+# 🕹️ Multiple Destinations
 
 ```ini
 [destination ANETGAMES]
@@ -359,6 +263,8 @@ client_user=%PASSWORD%
 server_user=%USER%
 term=ansi/115200
 expect_ack=1
+viewer_cols=80
+viewer_rows=25
 
 [destination OTHERBBS]
 name=Another RLogin BBS
@@ -368,50 +274,36 @@ client_user=%USER%
 server_user=%ALIAS%
 term=ansi/115200
 expect_ack=1
+viewer_cols=80
+viewer_rows=25
 ```
 
-Corresponding BBS commands:
+BBS menu entries:
 
 ```text
 ANETRLGN.EXE ANETGAMES
 ANETRLGN.EXE OTHERBBS
 ```
 
-The same executable is used for every destination.
+Callers only supply the destination ID. They cannot choose arbitrary hosts or
+ports. ANetRLogin supports up to **32 configured destinations**.
 
-ANetRLogin supports up to **32 configured destinations**.
-
-> Restart `ANETRLB.EXE` after changing `ANETRLGN.INI`.
+Restart `ANETRLB.EXE` after editing `ANETRLGN.INI`.
 
 ---
 
 # 👥 Multi-Node Operation
 
-ANetRLogin supports up to **10 BBS nodes** through a single
-`ANETRLB.EXE` bridge.
+ANetRLogin supports up to **10 BBS nodes** through one `ANETRLB.EXE` bridge.
+Multi-node operation has been live-tested on A-Net Online with two simultaneous
+Spitfire nodes connected to A-Net Game Server.
 
-Multi-node operation has been live-tested on A-Net Online with two
-simultaneous Spitfire nodes connected to the A-Net Game Server.
-
-Each node uses its own `ANETRLGN.EXE` / `ANETRLGN.CFG` launch directory when
-its `DOOR.SYS` resides in a different location, while all nodes share the
-same `DoorDir`.
-
-For the live A-Net Online Spitfire extended door menu:
-
-```text
-Node 1 DOOR.SYS:
-C:\SF\SFEXTEN2\DOOR.SYS
-
-Node 2 DOOR.SYS:
-C:\SF2\SFEXTEN2\DOOR.SYS
-```
-
-A convenient layout is:
+Recommended layout:
 
 ```text
 C:\SF\ANETRLGN\
     ANETRLB.EXE
+    ANETRLV.EXE
     ANETRLGN.INI
 
 C:\SF\ANETRLGN\NODE1\
@@ -423,37 +315,14 @@ C:\SF\ANETRLGN\NODE2\
     ANETRLGN.CFG
 ```
 
-Node 1 `ANETRLGN.CFG`:
-
-```text
-BBSDir C:\SF\SFEXTEN2
-DoorDir C:\SF\ANETRLGN
-
-DisableLogging
-```
-
-Node 2 `ANETRLGN.CFG`:
-
-```text
-BBSDir C:\SF2\SFEXTEN2
-DoorDir C:\SF\ANETRLGN
-
-DisableLogging
-```
-
 Door commands:
 
 ```text
-Node 1:
-C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE ANETGAMES
-
-Node 2:
-C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE ANETGAMES
+Node 1: C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE ANETGAMES
+Node 2: C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE ANETGAMES
 ```
 
-Only **one `ANETRLB.EXE` bridge** is required.
-
-Each node receives its own IPC files:
+Only **one bridge** is required. Per-node files keep sessions isolated:
 
 ```text
 Node 1: ARL01.*
@@ -462,84 +331,95 @@ Node 2: ARL02.*
 Node 10: ARL10.*
 ```
 
-This keeps simultaneous RLogin sessions isolated while sharing one bridge.
+When the local viewer is enabled, the bridge also creates read-only monitor
+spools such as `ARL01.VWR` / `ARL01.VMI` and launches one viewer per active
+node.
 
 ---
 
-# ▶️ Starting the Windows Bridge
+# 🖼️ Local ANSI/CP437 Viewer
 
-From a Windows command prompt:
+The separate viewer was added because raw local echo inside the DOS door did
+not provide a reliable ANSI display and could interfere with normal door
+behavior. The caller relay is therefore left alone.
+
+```text
+Caller path:  ANETRLB -> ANETRLGN -> FOSSIL -> caller
+Viewer path:  ANETRLB -> ARLnn.VWR -> ANETRLV
+```
+
+`ANETRLV.EXE` is read-only. It cannot send keys to the remote system, and
+closing it does not disconnect the BBS user.
+
+### v0.2.5: 80x25 exact-size fix
+
+v0.2.4 proved the viewer architecture live, but the viewer used a hard-coded
+80-column terminal and cut off the right side of 80-column Synchronet
+screens. v0.2.5 makes the viewer geometry configurable and sizes the Win32
+client area from the actual Terminal font metrics with `AdjustWindowRectEx`.
+
+For A-Net Game Server use:
+
+```ini
+viewer_cols=80
+viewer_rows=25
+```
+
+For ordinary 80-column systems use `80`/`25` or omit the destination override.
+
+---
+
+# ▶️ Starting the Bridge
 
 ```bat
 CD /D C:\SF\ANETRLGN
 ANETRLB.EXE
 ```
 
-Leave the bridge running while ANetRLogin is available to callers.
-
-Restart the bridge after changing `ANETRLGN.INI`.
+Leave it running while callers use ANetRLogin. With `local_viewer=1`, the
+bridge automatically launches `ANETRLV.EXE` when a node connects.
 
 ---
 
 # 🔙 Disconnecting
 
-While connected through ANetRLogin, press:
+A remote service may exit normally and return control to ANetRLogin. For a
+manual/emergency disconnect, press:
 
 ```text
 ESC ESC ESC
 ```
 
-three times quickly.
-
-ANetRLogin disconnects the outbound RLogin session and returns the caller
-to the BBS.
+three times quickly to disconnect the outbound RLogin session and return to
+the BBS.
 
 ---
 
-# ⚡ v0.2.x Low-Latency Relay
+# ⚡ Low-Latency Relay
 
-The low-latency relay engine uses:
-
-- Non-blocking network I/O
-- `TCP_NODELAY`
-- Fast DOS/Win32 IPC polling
-- Immediate outbound keystroke processing
-- Immediate draining of available inbound network traffic
-- Reduced idle polling delays
-
-The result is responsive interactive ANSI/RLogin use even through the
-16-bit DOS door → Win32 bridge architecture.
+The v0.2.x relay uses non-blocking network I/O, `TCP_NODELAY`, fast IPC
+polling, immediate outbound keystroke processing, and immediate draining of
+available inbound traffic. The local viewer is a separate mirror and does not
+sit in this latency-sensitive caller path.
 
 ---
 
 # 🔐 Security
 
-ANetRLogin uses a strict **destination allowlist**.
-
-A caller cannot provide an arbitrary hostname or TCP port. The sysop controls
-the actual destination in `ANETRLGN.INI`.
-
-### Password handling
+ANetRLogin uses a strict destination allowlist. A caller cannot provide an
+arbitrary hostname or TCP port.
 
 When `%PASSWORD%` is used:
 
-- The bridge does **not display the password**
-- The bridge does **not include the password in normal log messages**
-- The password is used only to construct the configured RLogin handshake
-- The local DOS-to-Windows request is transient and is consumed by the bridge
+- the bridge does **not display the password**;
+- normal bridge logs do **not contain the password**;
+- viewer metadata does **not contain the password**;
+- `ANETRLV.EXE` never displays the password;
+- the transient DOS-to-Windows request is consumed by the bridge.
 
-### RLogin Security Notice
-
-RLogin is a **plaintext protocol**.
-
-When `%PASSWORD%` is selected, the caller's password is sent across the
-network as plaintext in the RLogin handshake.
-
-Use RLogin only with systems you trust and preferably across trusted/private
-networks or VPN paths where appropriate.
-
-Synchronet's `-h` mode avoids transmitting the original password by sending
-a salted hash instead. ANetRLogin v0.2.1 does not yet implement that mode.
+RLogin itself is a **plaintext protocol**. `%PASSWORD%` therefore travels over
+the RLogin connection in plaintext. Use systems you trust and private/VPN
+paths where practical.
 
 ---
 
@@ -554,35 +434,29 @@ OpenDoors
 DOOR.SYS
 FOSSIL / virtual modem environment
 SyncTERM
-Synchronet RLogin server
+Synchronet RLogin
 A-Net Game Server
+Two simultaneous Spitfire nodes
+Separate Win32 local viewer
 ```
-
-Multi-node testing has also been completed with **two simultaneous Spitfire
-nodes**, both connected through one `ANETRLB.EXE` bridge.
 
 ---
 
 # 🙏 Credits
 
-**ANetRLogin** was created by:
-
-**Jerry Reed (StingRay)**  
-**A-Net Online**
+**ANetRLogin** was created by **Jerry Reed (StingRay) / A-Net Online**.
 
 The 16-bit DOS portion uses the **OpenDoors Door Programming Toolkit**:
-
 https://github.com/RealDeuce/OpenDoors
 
-Special thanks to the OpenDoors developers and contributors for preserving
-and maintaining a modern toolkit for classic BBS door development.
+Special thanks to the OpenDoors developers and contributors for preserving and
+maintaining a modern toolkit for classic BBS door development.
 
 ---
 
 # 📜 License
 
-**MIT License**
-
+**MIT License**  
 Copyright © 2026 **A-Net Online / Jerry Reed (StingRay)**
 
 See `LICENSE` for details.
@@ -591,16 +465,8 @@ See `LICENSE` for details.
 
 # 🌐 A-Net Online
 
-**ANetRLogin**  
-By **A-Net Online**  
-Sysop: **StingRay**
-
-### Web
-
 - https://a-net.online
 - https://bbs.a-net.fyi
-
-### A-Net Online BBS
 
 ```text
 Telnet : bbs.a-net.online:1337

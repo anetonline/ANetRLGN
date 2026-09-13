@@ -1,145 +1,39 @@
-ANetRLogin v0.2.0 - Installation
+ANetRLogin v0.2.5 - Installation
+=================================
 
+FILES
+-----
+ANETRLGN.EXE  16-bit DOS door
+ANETRLB.EXE   Win32 RLogin bridge
+ANETRLV.EXE   Win32 local ANSI/CP437 viewer
+ANETRLGN.CFG  OpenDoors/drop-file configuration
+ANETRLGN.INI  General settings and destination allowlist
 
+1. SHARED DIRECTORY
+-------------------
+Create a shared directory such as:
 
-    C:\PATH\TO           BBS working directory / live DOOR.SYS
-                        (i.e. c:\bbs -if door.sys is in c:\bbs)
-    C:\path\to\ANETRLGN  ANetRLogin directory
+    C:\SF\ANETRLGN
 
-If your BBS uses different directories, change ANETRLGN.CFG accordingly.
+Place at least these files there:
 
-1. Create the Door Directory
-
-Create:
-
-    C:\BBS\ANETRLGN
-
-Copy these files into it:
-
-    ANETRLGN.EXE
     ANETRLB.EXE
-    ANETRLGN.CFG
+    ANETRLV.EXE
     ANETRLGN.INI
 
-README.TXT, INSTALL.TXT, SETUP.TXT and FILE_ID.DIZ may also be kept
-there.
-
-2. Configure 
-
-ANETRLGN.CFG should contain:
-
-    BBSDir C:\BBS
-    DoorDir C:\bbs\doors\ANETRLGN
-    DisableLogging    (or enable)
-
-BBSDir must point to the directory containing the live DOOR.SYS
-generated for the caller.
-
-DoorDir must point to the ANetRLogin directory. The DOS door and Windows
-bridge use this directory for their per-node relay files.
-
-3. Configure Destinations
-
-Edit ANETRLGN.INI and create one [destination ID] section for each
-allowed RLogin server.
+2. NODE-SPECIFIC DOS DOOR
+-------------------------
+If nodes write DOOR.SYS in different directories, give each node its own
+ANETRLGN.EXE and ANETRLGN.CFG launch directory.
 
 Example:
 
-    [destination ANETGAMES]
-    name=A-Net Game Server
-    host=game.a-net-online.lol
-    port=513
-    client_user=%PASSWORD%
-    server_user=%USER%
-    term=ansi/115200
-    expect_ack=1
+    C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE
+    C:\SF\ANETRLGN\NODE1\ANETRLGN.CFG
+    C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE
+    C:\SF\ANETRLGN\NODE2\ANETRLGN.CFG
 
-See SETUP.TXT for multiple destinations and field descriptions.
-
-4. Start the Windows Bridge
-
-Open a Windows command prompt:
-
-    CD /D C:\path\to\ANETRLGN
-    ANETRLB.EXE
-
-Leave the bridge running while callers use ANetRLogin.
-
-At startup it reports how many allowlisted destinations were loaded.
-
-If you edit ANETRLGN.INI, stop and restart ANETRLB.EXE so the new
-configuration is loaded.
-
-5. Add the Door to the BBS
-
-Configure the BBS to launch ANETRLGN.EXE with the desired destination
-ID.
-
-Example:
-
-    C:\bbs\doors\ANETRLGN\ANETRLGN.EXE ANETGAMES
-
-For another destination:
-
-    C:\bbs\doors\ANETRLGN\ANETRLGN.EXE ANETBBS
-
-Each BBS menu entry can therefore point to the same executable with a
-different destination ID.
-
-6. Test
-
-Call the BBS remotely through the normal modem/Telnet/NetSerial path and
-launch the new door.
-
-A successful session follows this path:
-
-    Caller
-      |
-      v
-    Spitfire / DOS BBS
-      |
-      v
-    ANETRLGN.EXE
-      |
-      v
-    ANETRLB.EXE
-      |
-      v
-    Remote RLogin Server
-
-To return to the BBS, press ESC three times quickly.
-
-Startup Note
-
-ANETRLB.EXE must be running for ANETRLGN.EXE to connect. Once
-installation has been tested manually, the bridge may be started
-automatically with Windows using the administrator’s preferred startup
-method.
-
-MULTI-NODE INSTALLATION
------------------------
-
-ANetRLogin supports up to 10 BBS nodes through one ANETRLB.EXE bridge.
-
-If each BBS node creates DOOR.SYS in a different directory, give each node
-its own ANETRLGN.EXE / ANETRLGN.CFG launch directory while keeping one
-shared bridge/IPC directory.
-
-Example:
-
-    C:\SF\ANETRLGN\
-        ANETRLB.EXE
-        ANETRLGN.INI
-
-    C:\SF\ANETRLGN\NODE1\
-        ANETRLGN.EXE
-        ANETRLGN.CFG
-
-    C:\SF\ANETRLGN\NODE2\
-        ANETRLGN.EXE
-        ANETRLGN.CFG
-
-A-Net Online Spitfire drop-file locations:
+A-Net Online extended-door drop files:
 
     Node 1: C:\SF\SFEXTEN2\DOOR.SYS
     Node 2: C:\SF2\SFEXTEN2\DOOR.SYS
@@ -150,18 +44,50 @@ Node 1 ANETRLGN.CFG:
     DoorDir C:\SF\ANETRLGN
     DisableLogging
 
-Node 2 ANETRLGN.CFG:
+Node 2:
 
     BBSDir C:\SF2\SFEXTEN2
     DoorDir C:\SF\ANETRLGN
     DisableLogging
 
-The rule is:
+BBSDir = directory containing that node's live DOOR.SYS.
+DoorDir = SAME shared ANetRLogin IPC directory for every node.
 
-    BBSDir  = node-specific drop-file directory
-    DoorDir = shared ANetRLogin IPC directory
+3. CONFIGURE ANETRLGN.INI
+-------------------------
 
-Door commands:
+    [general]
+    local_viewer=1
+    viewer_cols=80
+    viewer_rows=25
+
+    [destination ANETGAMES]
+    name=A-Net Game Server
+    host=game.a-net-online.lol
+    port=513
+    client_user=%PASSWORD%
+    server_user=%USER%
+    term=ansi/115200
+    expect_ack=1
+    viewer_cols=80
+    viewer_rows=25
+
+The tested Synchronet mapping is PASSWORD FIRST, USER SECOND.
+
+viewer_cols/viewer_rows control only the local ANETRLV.EXE window. The A-Net
+Game Server uses 80x25. Other destinations may override the viewer geometry if needed.
+
+4. START THE BRIDGE
+-------------------
+
+    CD /D C:\SF\ANETRLGN
+    ANETRLB.EXE
+
+With local_viewer=1, the bridge starts a separate ANETRLV.EXE window when a
+node connects. Closing that viewer does not disconnect the caller.
+
+5. ADD BBS MENU ENTRIES
+-----------------------
 
     Node 1:
     C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE ANETGAMES
@@ -169,50 +95,36 @@ Door commands:
     Node 2:
     C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE ANETGAMES
 
-Do NOT start another bridge for Node 2.
+Use the same EXE with a different destination ID for other configured servers.
 
-One ANETRLB.EXE services all active nodes. Sessions are separated by node:
+6. TEST
+-------
+Confirm:
+- caller ANSI/CP437 looks correct;
+- local viewer opens and shows the full configured width;
+- normal remote exit returns to the BBS;
+- ESC ESC ESC can force a manual disconnect;
+- multiple nodes remain independent.
 
-    Node 1 -> ARL01.*
-    Node 2 -> ARL02.*
-    ...
-    Node 10 -> ARL10.*
-
-Multi-node operation has been live-tested with two simultaneous Spitfire
-nodes connected to the A-Net Game Server.
-
+MULTI-NODE
+----------
+ANetRLogin supports up to 10 BBS nodes through ONE ANETRLB.EXE bridge.
+Do not run one bridge per node. Node IPC files are ARL01.*, ARL02.*, etc.
 
 PASSWORD SECURITY
 -----------------
+%USER%, %ALIAS%, and %PASSWORD% are available. Passwords are never shown by
+the bridge/local viewer or written into viewer metadata. RLogin itself is
+plaintext, so a %PASSWORD% value is transmitted unencrypted on the network.
 
-ANetRLogin v0.2.1 supports:
-
-    %USER%
-    %ALIAS%
-    %PASSWORD%
-
-The bridge never displays the expanded password and does NOT include it in
-normal log messages.
-
-RLogin itself is plaintext. A password passed using %PASSWORD% is therefore
-transmitted unencrypted over the RLogin connection.
-
-
-
-Troubleshooting
-
-If the door starts but cannot connect:
-
-1.  Confirm ANETRLB.EXE is running.
-2.  Confirm the destination ID on the BBS command exactly matches the
-    [destination ID] in ANETRLGN.INI.
-3.  Confirm the hostname and port are correct.
-4.  Confirm the Windows machine can reach the remote host and port.
-5.  Confirm BBSDir points to the directory containing the current
-    DOOR.SYS.
-6.  Confirm DoorDir points to the same directory in which the bridge is
-    running.
-7.  Restart ANETRLB.EXE after changing ANETRLGN.INI.
-
-Do not expose arbitrary destination input to callers. Keep all hosts and
-ports in the ANETRLGN.INI allowlist.
+TROUBLESHOOTING
+---------------
+1. Confirm ANETRLB.EXE is running.
+2. Confirm the destination ID exactly matches ANETRLGN.INI.
+3. Confirm host/port connectivity.
+4. Confirm BBSDir points to the active node's DOOR.SYS directory.
+5. Confirm every node uses the same shared DoorDir.
+6. Confirm ANETRLV.EXE is beside ANETRLB.EXE when local_viewer=1.
+7. For clipped viewer output, set the destination viewer_cols correctly
+   (A-Net Game Server: 80) and restart ANETRLB.EXE.
+8. Restart the bridge after changing ANETRLGN.INI.

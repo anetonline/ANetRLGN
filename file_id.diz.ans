@@ -1,14 +1,14 @@
 [0m[1;31;41m‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹[30;40m€[0m
 [1;31;41m‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹[30;40m€[0m
 [1;31;41m‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹[30;40m€[0m
-[1;31;41m‹‹‹‹‹[0m  [1mANetRLogin [0mv[1m0[0m.[1m2[0m.[1m0[0m                                                      [1;30m€[0m
+[1;31;41m‹‹‹‹‹[0m  [1mANetRLogin [0mv[1m0[0m.[1m2[0m.[1m5[0m                                                      [1;30m€[0m
 [1;31;41m‹‹‹‹‹[0m                                                                         [1;30m€[0m
 [1;31;41m‹‹‹‹‹[0m  [1mOutbound RLogin for classic DOS BBS systems.                           [30m€[0m
-[1;31;41m‹‹‹‹‹[0m  [1m16-bit DOS/OpenDoors door + Win32 bridge.                              [30m€[0m
-[1;31;41m‹‹‹‹‹[0m  [1mSupports DOOR.SYS/FOSSIL, per-node sessions, multiple                  [30m€[0m
-[1;31;41m‹‹‹‹‹[0m  [1mallowlisted RLogin destinations, %USER%/%ALIAS% mapping, ANSI terminal [30m€[0m
+[1;31;41m‹‹‹‹‹[0m  [1m16-bit DOS door + Win32 bridge + ANSI viewer.                          [30m€[0m
+[1;31;41m‹‹‹‹‹[0m  [1mSupports DOOR.SYS/FOSSIL, 10 nodes, 32 destinations,                   [30m€[0m
+[1;31;41m‹‹‹‹‹[0m  [1m%USER%/%ALIAS%/%PASSWORD%, multi-node IPC, ANSI/CP437 viewer.          [30m€[0m
 [1;31;41m‹‹‹‹‹[0m  [1mrelay, and quick ESC-ESC-ESC return to the BBS.                        [30m€[0m
-[1;31;41m‹‹‹‹‹[0m  [1mLow-latency v0.2 network/IPC relay engine.                             [30m€[0m
+[1;31;41m‹‹‹‹‹[0m  [1mLow-latency relay + 80-column local viewer.                              [30m€[0m
 [1;31;41m‹‹‹‹‹[0m  [1mDeveloped/tested with Spitfire on A-Net Online.                        [30m€[0m
 [1;31;41m‹‹‹‹‹[0m                                                                         [1;30m€[0m
 [1;31;41m‹‹‹‹‹[0m  [1mBy: A-Net Online / StingRay                                            [30m€[0m

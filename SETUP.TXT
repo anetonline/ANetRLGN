@@ -1,5 +1,17 @@
-ANetRLogin v0.2.1 - Configuration
-=================================
+ANetRLogin v0.2.5 - Configuration
+==================================
+
+GENERAL
+-------
+
+    [general]
+    local_viewer=1
+    viewer_cols=80
+    viewer_rows=25
+
+local_viewer=1 automatically opens ANETRLV.EXE for active nodes.
+viewer_cols/viewer_rows are defaults and may be overridden per destination.
+Supported viewer geometry: 40-160 columns, 20-60 rows.
 
 DESTINATION FORMAT
 ------------------
@@ -12,6 +24,8 @@ DESTINATION FORMAT
     server_user=...
     term=ansi/115200
     expect_ack=1
+    viewer_cols=80
+    viewer_rows=25
 
 Available caller macros:
 
@@ -19,14 +33,9 @@ Available caller macros:
     %ALIAS%      BBS alias / handle
     %PASSWORD%   BBS password
 
-These macros may be placed in either RLogin identity field because different
-RLogin servers use RFC1282's client-user and server-user fields differently.
-
-
 SYNCHRONET-COMPATIBLE LOGIN
 ---------------------------
-
-The tested working mapping for A-Net Game Server / Synchronet is:
+Tested A-Net Game Server mapping:
 
     [destination ANETGAMES]
     name=A-Net Game Server
@@ -36,24 +45,18 @@ The tested working mapping for A-Net Game Server / Synchronet is:
     server_user=%USER%
     term=ansi/115200
     expect_ack=1
+    viewer_cols=80
+    viewer_rows=25
 
 This is PASSWORD FIRST, USER SECOND.
 
-Do not reverse these two fields for a Synchronet-compatible target unless
-that server is specifically configured to expect something different.
-
-Synchronet rlogin.js provides a -p mode for passing the caller identity and
-plain password. ANetRLogin v0.2.1 provides the equivalent capability using
-%PASSWORD%.
-
-Synchronet also provides -h for a salted/hashed password. ANetRLogin v0.2.1
-does not yet implement Synchronet's hashing format.
-
+ANetRLogin currently implements the plain-password case using %PASSWORD%. It
+does not currently implement Synchronet's salted/hashed -h password format.
 
 OTHER SERVERS
 -------------
-
-Because the fields are configurable, another server might use:
+Different RLogin servers may repurpose RFC1282 identity fields differently.
+Examples:
 
     client_user=%PASSWORD%
     server_user=%ALIAS%
@@ -63,15 +66,11 @@ or:
     client_user=%USER%
     server_user=%ALIAS%
 
-Choose the mapping required by that destination.
-
+The mapping is destination-specific.
 
 MULTIPLE DESTINATIONS
 ---------------------
-
-ANetRLogin supports up to 32 configured destinations.
-
-Example:
+ANetRLogin supports up to 32 configured destinations. Example:
 
     [destination ANETGAMES]
     name=A-Net Game Server
@@ -81,6 +80,8 @@ Example:
     server_user=%USER%
     term=ansi/115200
     expect_ack=1
+    viewer_cols=80
+    viewer_rows=25
 
     [destination OTHERBBS]
     name=Another BBS
@@ -90,30 +91,31 @@ Example:
     server_user=%ALIAS%
     term=ansi/115200
     expect_ack=1
+    viewer_cols=80
+    viewer_rows=25
 
 Launch with:
 
     ANETRLGN.EXE ANETGAMES
-
-or:
-
     ANETRLGN.EXE OTHERBBS
 
 Restart ANETRLB.EXE after changing ANETRLGN.INI.
 
+LOCAL VIEWER
+------------
+ANETRLV.EXE is read-only and outside the caller path. The bridge mirrors
+incoming bytes to ARLnn.VWR and safe metadata to ARLnn.VMI. Passwords are
+never written to viewer metadata.
+
+v0.2.5 supports configurable column modes and sizes the Win32 viewer from the
+actual Terminal font metrics so the configured right edge remains visible.
 
 MULTI-NODE
 ----------
+Up to 10 nodes share one bridge. Each node's BBSDir points to its own live
+DOOR.SYS location while every node uses the same shared DoorDir.
 
-ANetRLogin supports up to 10 BBS nodes through one bridge.
-
-Each node with a separate DOOR.SYS directory needs an ANETRLGN.CFG pointing
-BBSDir to that node's drop-file directory.
-
-All nodes must use the same DoorDir so the single ANETRLB.EXE bridge sees
-every node's IPC files.
-
-A-Net Online live Spitfire examples:
+A-Net examples:
 
     Node 1:
         BBSDir C:\SF\SFEXTEN2
@@ -123,26 +125,17 @@ A-Net Online live Spitfire examples:
         BBSDir C:\SF2\SFEXTEN2
         DoorDir C:\SF\ANETRLGN
 
-Node IPC naming:
-
-    ARL01.*  Node 1
-    ARL02.*  Node 2
+Node files:
+    ARL01.* Node 1
+    ARL02.* Node 2
     ...
-    ARL10.*  Node 10
+    ARL10.* Node 10
 
-Two simultaneous Spitfire nodes have been live-tested successfully through
-one ANETRLB.EXE bridge.
-
+Two simultaneous Spitfire nodes have been live-tested successfully through a
+single bridge.
 
 SECURITY
 --------
-
-The destination ID is an allowlist key. Callers do not supply arbitrary
-hostnames or ports.
-
-The bridge must never display or log an expanded %PASSWORD%.
-
-RLogin is plaintext. Using %PASSWORD% transmits the caller's password
-unencrypted over the network.
-
-Use trusted destinations and private/VPN paths where practical.
+The destination ID is an allowlist key. Callers do not supply arbitrary hosts
+or ports. The bridge/local viewer must never display/log expanded %PASSWORD%.
+RLogin is plaintext; use trusted/private/VPN paths where practical.
