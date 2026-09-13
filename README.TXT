@@ -55,7 +55,13 @@ Disconnecting
 Press ESC three times quickly while inside ANetRLogin to disconnect the
 outbound RLogin session and return to the BBS.
 
-Security
+SECURITY
+--------
+RLogin is plaintext. When %PASSWORD% is used, the password is transmitted
+unencrypted over the RLogin connection.
+
+ANetRLogin uses a destination allowlist and does not allow callers to
+supply arbitrary hosts or ports.
 
 RLogin is a plaintext protocol. ANetRLogin does not add encryption to
 it. Use RLogin only to systems you trust and preferably across
@@ -65,9 +71,7 @@ ANetRLogin deliberately does NOT accept an arbitrary hostname or port
 from the caller. All remote systems must be explicitly configured in
 ANETRLGN.INI.
 
-Version 0.2.0
-
-v0.2.0 is the low-latency release. It improves interactive
+Low-latency release. It improves interactive
 responsiveness with non-blocking network relay behavior, TCP_NODELAY,
 faster IPC polling, and immediate handling of terminal traffic.
 
