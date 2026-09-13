@@ -49,8 +49,8 @@ Example:
     name=A-Net Game Server
     host=game.a-net-online.lol
     port=513
-    client_user=%USER%
-    server_user=%ALIAS%
+    client_user=%PASSWORD%
+    server_user=%USER%
     term=ansi/115200
     expect_ack=1
 
@@ -116,87 +116,86 @@ installation has been tested manually, the bridge may be started
 automatically with Windows using the administrator’s preferred startup
 method.
 
-# MULTI-NODE INSTALLATION
+MULTI-NODE INSTALLATION
+-----------------------
 
-ANetRLogin can service multiple simultaneous BBS nodes through one running
-ANETRLB.EXE bridge.
+ANetRLogin supports up to 10 BBS nodes through one ANETRLB.EXE bridge.
 
-If every BBS node creates its drop file in a different directory, each node
-needs its own ANETRLGN.CFG so OpenDoors can locate that node's DOOR.SYS.
+If each BBS node creates DOOR.SYS in a different directory, give each node
+its own ANETRLGN.EXE / ANETRLGN.CFG launch directory while keeping one
+shared bridge/IPC directory.
 
-Example Spitfire installation:
+Example:
 
-```
-Node 1 drop file:
-C:\SF\SFEXTEN2\DOOR.SYS
+    C:\SF\ANETRLGN\
+        ANETRLB.EXE
+        ANETRLGN.INI
 
-Node 2 drop file:
-C:\SF2\SFEXTEN2\DOOR.SYS
-```
+    C:\SF\ANETRLGN\NODE1\
+        ANETRLGN.EXE
+        ANETRLGN.CFG
 
-A convenient layout is:
+    C:\SF\ANETRLGN\NODE2\
+        ANETRLGN.EXE
+        ANETRLGN.CFG
 
-```
-C:\SF\ANETRLGN\
-    ANETRLB.EXE
-    ANETRLGN.INI
+A-Net Online Spitfire drop-file locations:
 
-C:\SF\ANETRLGN\NODE1\
-    ANETRLGN.EXE
-    ANETRLGN.CFG
-
-C:\SF\ANETRLGN\NODE2\
-    ANETRLGN.EXE
-    ANETRLGN.CFG
-```
+    Node 1: C:\SF\SFEXTEN2\DOOR.SYS
+    Node 2: C:\SF2\SFEXTEN2\DOOR.SYS
 
 Node 1 ANETRLGN.CFG:
 
-```
-BBSDir C:\SF\SFEXTEN2
-DoorDir C:\SF\ANETRLGN
-DisableLogging
-```
+    BBSDir C:\SF\SFEXTEN2
+    DoorDir C:\SF\ANETRLGN
+    DisableLogging
 
 Node 2 ANETRLGN.CFG:
 
-```
-BBSDir C:\SF2\SFEXTEN2
-DoorDir C:\SF\ANETRLGN
-DisableLogging
-```
+    BBSDir C:\SF2\SFEXTEN2
+    DoorDir C:\SF\ANETRLGN
+    DisableLogging
 
-IMPORTANT:
+The rule is:
 
-```
-BBSDir  is specific to each BBS node.
-DoorDir must be shared by all ANetRLogin nodes.
-```
+    BBSDir  = node-specific drop-file directory
+    DoorDir = shared ANetRLogin IPC directory
 
-The shared DoorDir allows every DOS-door instance to communicate with the
-same ANETRLB.EXE bridge.
+Door commands:
 
-Example door commands:
+    Node 1:
+    C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE ANETGAMES
 
-```
-Node 1:
-C:\SF\ANETRLGN\NODE1\ANETRLGN.EXE ANETGAMES
+    Node 2:
+    C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE ANETGAMES
 
-Node 2:
-C:\SF\ANETRLGN\NODE2\ANETRLGN.EXE ANETGAMES
-```
+Do NOT start another bridge for Node 2.
 
-Do NOT start a separate ANETRLB.EXE for every BBS node.
+One ANETRLB.EXE services all active nodes. Sessions are separated by node:
 
-One bridge services the active nodes and creates a separate outbound RLogin
-connection for each caller.
+    Node 1 -> ARL01.*
+    Node 2 -> ARL02.*
+    ...
+    Node 10 -> ARL10.*
 
-ANetRLogin identifies sessions by BBS node number. Node 1 uses ARL01.*
-IPC files, Node 2 uses ARL02.*, and so on.
+Multi-node operation has been live-tested with two simultaneous Spitfire
+nodes connected to the A-Net Game Server.
 
-This configuration has been tested live with two simultaneous nodes on
-A-Net Online's Spitfire BBS, with both callers connected through ANetRLogin
-to the A-Net Game Server.
+
+PASSWORD SECURITY
+-----------------
+
+ANetRLogin v0.2.1 supports:
+
+    %USER%
+    %ALIAS%
+    %PASSWORD%
+
+The bridge never displays the expanded password and does NOT include it in
+normal log messages.
+
+RLogin itself is plaintext. A password passed using %PASSWORD% is therefore
+transmitted unencrypted over the RLogin connection.
 
 
 
